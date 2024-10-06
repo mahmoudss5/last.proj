@@ -3,40 +3,51 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Room Needed Luminance Results</title>
+<title>Lumen/Watt Calculator</title>
 <style>
     body {
         font-family: Arial, sans-serif;
         background-color: #121212; /* Dark background */
         color: #e0e0e0; /* Light text color */
         margin: 0;
-        padding: 0;
-        height: 100vh; /* Full height for body */
-        display: flex;
-        justify-content: center;
-        align-items: center;
+        padding: 20px;
     }
     .container {
         background-color: #1e1e1e; /* Darker container */
         padding: 20px;
         border-radius: 8px;
         box-shadow: 0 0 10px rgba(0,0,0,0.5); /* Darker shadow */
-        width: 100%; /* Full width */
-        max-width: 400px; /* Max width for larger screens */
-        margin: auto;
+        width: 100%;
+        max-width: 400px; /* Max width to control the container size */
+        margin: 20px auto; /* Center the container */
     }
-    p {
-        margin: 15px 0;
-        font-size: 16px;
+    .form-group {
+        margin-top: 15px;
+    }
+    label {
+        display: block;
+        margin-bottom: 5px;
         color: #e0e0e0; /* Light text color */
     }
-    h2 {
-        text-align: center;
-        color: #ffffff; /* White text for header */
+    .inline-label {
+        display: inline-block;
+        margin-right: 10px;
+        color: #e0e0e0; /* Light text color */
+    }
+    input[type="text"], select {
+        width: 100%;
+        padding: 8px;
+        background-color: #333333; /* Dark input fields */
+        color: #ffffff; /* Light text color */
+        border: 1px solid #555555; /* Darker border */
+        box-sizing: border-box;
+    }
+    input[type="radio"] {
+        margin-right: 5px;
     }
     button {
         padding: 10px;
-        background-color: #007BFF;
+        background-color: #007BFF; /* Same color for button */
         color: white;
         border: none;
         border-radius: 5px;
@@ -46,120 +57,104 @@
         cursor: pointer;
     }
     button:hover {
-        background-color: #0056b3;
-    }
-    input {
-        width: 100%;
-        padding: 10px;
-        margin-top: 15px;
-        border-radius: 5px;
-        background-color: #333333; /* Dark input fields */
-        color: #ffffff; /* Light text color */
-        border: 1px solid #555555; /* Darker border */
-        font-size: 16px;
+        background-color: #0056b3; /* Darker hover effect */
     }
 
-    /* Media query for small screens */
+    /* Responsive design for small screens */
     @media (max-width: 600px) {
         .container {
             padding: 15px;
         }
-        button, input {
-            font-size: 14px;
+        input[type="text"], select, button {
+            font-size: 14px; /* Adjust font size for small screens */
         }
     }
 </style>
 </head>
 <body>
 <div class="container">
-    <h2>Calculated Luminance Results</h2>
-    <p id="resultText">Calculating...</p>
+    <h2>Lumen/Watt Calculator</h2>
+    <form id="lumenForm">
+        <div class="form-group">
+            <label for="roomType">Select Room Type</label>
+            <select id="roomType">
+                <option value="bedroom">Bedroom</option>
+                <option value="kitchen">Kitchen</option>
+                <option value="livingRoom">Living Room</option>
+            </select>
+        </div>
 
-    <label for="bulbLuminance">Enter the luminance of the bulb (in lumens):</label>
-    <input type="number" id="bulbLuminance" placeholder="Enter lumens of one bulb">
-    
-    <button onclick="calculateBulbs()">Calculate Number of Bulbs</button>
-    <button onclick="goBack()">Back</button>
+        <div class="form-group">
+            <label>Measurement Unit</label>
+            <label class="inline-label"><input type="radio" id="feet" name="measurement" value="feet">Feet</label>
+            <label class="inline-label"><input type="radio" id="inches" name="measurement" value="inches">Inches</label>
+            <label class="inline-label"><input type="radio" id="meters" name="measurement" value="meters" checked>Meters</label>
+        </div>
+
+        <div class="form-group">
+            <label for="width">Width</label>
+            <input type="text" id="width" placeholder="Enter width">
+        </div>
+
+        <div class="form-group">
+            <label for="length">Length</label>
+            <input type="text" id="length" placeholder="Enter length">
+        </div>
+
+        <div class="form-group">
+            <label>Lighting Intensity</label>
+            <label class="inline-label"><input type="radio" id="low" name="intensity" value="low">Low</label>
+            <label class="inline-label"><input type="radio" id="medium" name="intensity" value="medium" checked>Medium</label>
+            <label class="inline-label"><input type="radio" id="high" name="intensity" value="high">High</label>
+        </div>
+
+        <div class="form-group">
+            <label>Wall Color</label>
+            <label class="inline-label"><input type="radio" id="light" name="color" value="light" checked>Light</label>
+            <label class="inline-label"><input type="radio" id="dark" name="color" value="dark">Dark</label>
+        </div>
+
+        <div class="form-group">
+            <label>Light Placement</label>
+            <label class="inline-label"><input type="radio" id="center" name="placement" value="center" checked>Center</label>
+            <label class="inline-label"><input type="radio" id="corners" name="placement" value="corners">Corners</label>
+        </div>
+
+        <button type="button" onclick="storeDataAndNavigate()">Calculate Luminance</button>
+    </form>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    var width = parseFloat(localStorage.getItem('width'));
-    var length = parseFloat(localStorage.getItem('length'));
-    var intensity = localStorage.getItem('intensity');
-    var measurement = localStorage.getItem('measurement');
-    var roomType = localStorage.getItem('roomType');
-    var color = localStorage.getItem('color');
-    var placement = localStorage.getItem('placement');
+function storeDataAndNavigate() {
+    var roomType = document.getElementById('roomType').value;
+    var measurement = document.querySelector('input[name="measurement"]:checked').value;
+    var width = document.getElementById('width').value;
+    var length = document.getElementById('length').value;
+    var intensity = document.querySelector('input[name="intensity"]:checked').value;
+    var color = document.querySelector('input[name="color"]:checked').value;
+    var placement = document.querySelector('input[name="placement"]:checked').value;
 
-    // Convert measurements if necessary
-    if (measurement === 'feet') {
-        width *= 0.3048; // Convert feet to meters
-        length *= 0.3048;
-    } else if (measurement === 'inches') {
-        width *= 0.0254; // Convert inches to meters
-        length *= 0.0254;
-    }
-
-    // Calculate area
-    var area = width * length; // in square meters
-
-    // Determine luminance per square meter based on intensity
-    var luminancePerSqM;
-    if (intensity === 'high') {
-        luminancePerSqM = 150;
-    } else if (intensity === 'medium') {
-        luminancePerSqM = 100;
-    } else {
-        luminancePerSqM = 50;
-    }
-
-    // Adjust luminance based on wall color
-    if (color === 'dark') {
-        luminancePerSqM *= 1.2; // Increase luminance by 20% for dark walls
-    }
-
-    // Adjust luminance based on light placement
-    if (placement === 'corners') {
-        luminancePerSqM *= 1.1; // Increase luminance by 10% for corner placement
-    }
-
-    // Adjust luminance based on room type
-    if (roomType === 'kitchen') {
-        luminancePerSqM *= 1.5; // Kitchens generally require more light
-    } else if (roomType === 'bedroom') {
-        luminancePerSqM *= 0.8; // Bedrooms may require less light
-    }
-
-    // Total required luminance
-    var totalLuminance = area * luminancePerSqM;
-
-    // Round to the nearest whole number
-    totalLuminance = Math.round(totalLuminance);
-
-    document.getElementById('resultText').textContent = 'The required luminance for your room is ' + totalLuminance + ' lumens.';
-    localStorage.setItem('totalLuminance', totalLuminance); // Save total luminance to localStorage
-});
-
-function calculateBulbs() {
-    var bulbLuminance = parseFloat(document.getElementById('bulbLuminance').value);
-    var totalLuminance = parseFloat(localStorage.getItem('totalLuminance'));
-
-    if (!bulbLuminance || bulbLuminance <= 0) {
-        alert('Please enter a valid bulb luminance.');
+    // Form validation
+    if (!width || isNaN(width) || width <= 0) {
+        alert('Please enter a valid width.');
         return;
     }
 
-    // Calculate number of bulbs required and round up
-    var numBulbs = Math.ceil(totalLuminance / bulbLuminance);
+    if (!length || isNaN(length) || length <= 0) {
+        alert('Please enter a valid length.');
+        return;
+    }
 
-    // Save to localStorage and redirect to new page
-    localStorage.setItem('numBulbs', numBulbs);
-    window.location.href = 'bulb-result.html';
-}
+    localStorage.setItem('roomType', roomType);
+    localStorage.setItem('measurement', measurement);
+    localStorage.setItem('width', width);
+    localStorage.setItem('length', length);
+    localStorage.setItem('intensity', intensity);
+    localStorage.setItem('color', color);
+    localStorage.setItem('placement', placement);
 
-function goBack() {
-    window.history.back();
+    // Navigate to the second page
+    location.href = 'results.html';
 }
 </script>
 </body>
